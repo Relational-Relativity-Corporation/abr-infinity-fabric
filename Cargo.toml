@@ -1,0 +1,13 @@
+﻿[package]
+name = "abr-infinity-fabric"
+version = "0.1.0"
+edition = "2021"
+authors = ["Robin Macomber <robinmacomber@gmail.com>"]
+description = "ABR Infinity Fabric â€” AMD MI355X topology declared as relational structure. Closes OC-DB-1."
+license = "UNLICENSED"
+
+[lib]
+name = "abr_infinity_fabric"
+path = "src/lib.rs"
+
+[dependencies]
