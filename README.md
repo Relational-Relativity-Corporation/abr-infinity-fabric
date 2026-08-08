@@ -1,4 +1,4 @@
-﻿# abr-infinity-fabric
+# abr-infinity-fabric
 
 **ABR Infinity Fabric — AMD Instinct MI355X topology declared as relational structure.**
 
@@ -11,7 +11,8 @@ Closes OC-DB-1: formal mapping of ABR operator traversal to Infinity Fabric hard
 
 Declares the AMD Instinct MI355X Infinity Fabric as a directed relational graph
 through M (AMD MI355X Platform specification, retrieved 2026-08-05) and applies
-the ABR A operator to identify the bandwidth bottleneck and derive throughput.
+the ABR A operator to identify the declared bandwidth constraint and characterize
+the hardware limits relevant to throughput.
 
 Closes OC-DB-1 and OC-DB-3 from abr-datacenter-build. See lib.rs for full
 closure argument.
@@ -21,7 +22,8 @@ closure argument.
 - Layer 1  abr-grid-integration: grid physics -> 100-175 MW viable band
 - Layer 2  abr-workload-architecture: compute -> same band independently
 - Layer 3  abr-datacenter-build: rack declared; efficiency readable from ops
-- Layer 4  abr-infinity-fabric (this repo): kernel maps to hardware natively
+- Layer 4  abr-infinity-fabric (this repo): kernel traversal maps structurally
+           to the declared hardware topology
 
 ## Build and Run
 
@@ -31,7 +33,9 @@ cargo test
 ## Closed Open Conditions
 
 - OC-DB-1  CLOSED: kernel-to-hardware mapping derived from declared structure
-- OC-DB-3  CLOSED STRUCTURALLY: throughput derived from declared constants
+- OC-DB-3  CLOSED STRUCTURALLY: throughput dependencies derived from declared
+           constants and execution structure. Numerical MI355X throughput remains
+           open under OC-IF-5 pending direct latency measurement.
 
 ## Open Conditions
 
@@ -46,25 +50,30 @@ cargo test
 
 - OC-IF-3  ROCm HIP kernel implementation: execution model declared here.
            HIP kernel source is a downstream deliverable. Implementation must
-           satisfy the declared HipKernelSpec interface.
+           satisfy the declared HipKernelSpec interface. Closes OC-IF-5 when
+           direct MI355X measurement is obtained.
 
 - OC-IF-4  Single working-set read per pass assumption: declared for sparse graphs
            where working set fits in cache. Formal derivation from operator
            mathematics remains open.
 
-- OC-IF-5  Throughput figure is latency-bound, not bandwidth-bound.
+- OC-IF-5  Throughput figure is consistent with latency-bound execution, not
+           bandwidth-bound.
            The derivation in throughput_invariants.rs assumed bandwidth-bound
            execution (throughput = bandwidth / working_set). Scaling measurement
-           on home system (abr-home-system-benchmark, Ryzen 5 7600X, 2026-08-08)
-           confirms the ABR kernel is latency-bound by the B operator sequential
-           dependency chain. NS/EDGE is constant across graph sizes 1,023-16,383
-           edges (4.25-4.69 ns/edge, ratios 1.00-1.05). Throughput on MI355X
-           requires revision from bandwidth/working-set derivation to:
+           on home system (abr-home-system-benchmark, Ryzen 5 7600X, 2026-08-08,
+           18/18 tests) shows NS/EDGE constant across graph sizes 1,023-16,383
+           edges (4.25-4.69 ns/edge, ratios 1.00-1.05). This result is consistent
+           with execution being latency-bound by the B operator sequential
+           dependency chain. Throughput on MI355X requires revision from
+           bandwidth/working-set derivation to:
              throughput = 1 / (n_edges x ns_per_edge_on_MI355X)
-           where ns_per_edge_on_MI355X is determined by HBM3E memory latency,
-           not bandwidth. The 7.6M analyses/second figure is an upper bound
-           pending direct measurement on MI355X hardware. OC-IF-3 is the path
-           to closing this condition.
+           where ns_per_edge_on_MI355X must be determined by direct MI355X
+           measurement; the home-system scaling result indicates that latency,
+           rather than aggregate bandwidth alone, must be represented. The
+           7.6M analyses/second figure is an upper bound pending direct
+           measurement on MI355X hardware. OC-IF-3 is the path to closing
+           this condition.
 
 - OC-DB-6  Self-describing property: supported by this repo execution model
            declaration. Formal derivation from operator fixed-point remains open.
@@ -77,5 +86,5 @@ cargo test
 - derived_invariants.rs V4.1 — Layer 3 invariants
 - AMD MI355X Platform specification (retrieved 2026-08-05)
 - AMD ROCm published specification
-- abr-home-system-benchmark — scaling measurement confirming latency-bound
+- abr-home-system-benchmark — scaling measurement consistent with latency-bound
   execution (2026-08-08, Ryzen 5 7600X, 18/18 tests, linear scaling confirmed)
