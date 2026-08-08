@@ -1,119 +1,81 @@
-# abr-infinity-fabric
+﻿# abr-infinity-fabric
 
 **ABR Infinity Fabric — AMD Instinct MI355X topology declared as relational structure.**
 
-Closes OC-DB-1: formal mapping of ABR operator traversal to Infinity Fabric hardware. 57/57 tests. Four-layer convergence confirmed.
-
 Metatron Dynamics, Inc. · Bounded over D. No claim beyond D.
 
----
+Closes OC-DB-1: formal mapping of ABR operator traversal to Infinity Fabric hardware.
+57/57 tests. Four-layer convergence confirmed.
 
-## What This Repository Establishes
+## Purpose
 
-This repository formally closes **OC-DB-1** from `abr-datacenter-build`:
+Declares the AMD Instinct MI355X Infinity Fabric as a directed relational graph
+through M (AMD MI355X Platform specification, retrieved 2026-08-05) and applies
+the ABR A operator to identify the bandwidth bottleneck and derive throughput.
 
-> *The ABR operator traversal pattern on sparse declared graphs is not yet formally mapped to AMD Infinity Fabric topology. The efficiency advantage is structurally derived; the hardware-specific throughput is an open condition.*
+Closes OC-DB-1 and OC-DB-3 from abr-datacenter-build. See lib.rs for full
+closure argument.
 
-**Closure argument:**
+## Layer Convergence
 
-1. The Infinity Fabric is declared as a directed relational graph through M — AMD MI355X Platform specification, retrieved 2026-08-05.
-2. The ABR A operator is applied to the fabric bandwidth field, sign consistent with the kernel declaration (`operators.rs` V8).
-3. The fabric switch (1,194.8 GB/s aggregate) is identified as the bandwidth bottleneck against module bandwidth (8,000 GB/s per module).
-4. Community analysis working sets (1 MB generous upper bound) fit entirely within module HBM3E (288 GB) — resident without eviction.
-5. Independent community analyses require **zero inter-module communication** — the fabric bottleneck is not active for this workload class.
-6. The ABR kernel executes at full declared HBM3E bandwidth (8.0 TB/s per module) for community analysis workloads.
-7. Throughput derived structurally: ~7.6M analyses/second per module, ~61M analyses/second at rack scale (8 modules).
+- Layer 1  abr-grid-integration: grid physics -> 100-175 MW viable band
+- Layer 2  abr-workload-architecture: compute -> same band independently
+- Layer 3  abr-datacenter-build: rack declared; efficiency readable from ops
+- Layer 4  abr-infinity-fabric (this repo): kernel maps to hardware natively
 
-**OC-DB-3** (community queue throughput) is closed structurally as a consequence. Correspondence requires instrument measurement — see open conditions.
+## Build and Run
 
----
+cargo build --release
+cargo test
 
-## Four-Layer Convergence
+## Closed Open Conditions
 
-This repository is Layer 4 in a four-layer independently derived argument:
-
-| Layer | Repository | Finding |
-|---|---|---|
-| 1 | `abr-grid-integration` | Grid physics → 100–175 MW viable band |
-| 2 | `abr-workload-architecture` | Compute architecture → same band independently |
-| 3 | `abr-datacenter-build` | Rack declared as relational structure; efficiency readable from operator output |
-| 4 | `abr-infinity-fabric` (this repo) | ABR kernel maps to MI355X hardware natively at full HBM3E bandwidth |
-
-Four independent derivations converging on the same declared structure.
-
----
-
-## Declared Provenance Chain
-
-Every quantity in this repository traces to a declared observable through M:
-
-| Quantity | Source | Provenance |
-|---|---|---|
-| Fabric aggregate bandwidth (1,194.8 GB/s) | AMD MI355X Platform specification | Published manufacturer specification through M |
-| Module memory bandwidth (8.0 TB/s) | AMD MI355X Platform specification | Published manufacturer specification through M |
-| Module HBM3E capacity (288 GB) | AMD MI355X Platform specification | Published manufacturer specification through M |
-| Community working set (1 MB) | `abr-community-grid-match` declared structure | Declared observable structure through M |
-| Reference LLM workload (140 GB) | Meta LLaMA 3 70B model card | Published model specification through M |
-| Software stack (ROCm 7.0 / HIP) | AMD ROCm published specification | Published software specification through M |
-
----
-
-## Module Structure
-
-```
-src/
-├── fabric_topology.rs       — Infinity Fabric as declared directed graph (9 loci, 16 edges)
-├── fabric_field.rs          — Bandwidth field; A operator; bottleneck identification
-├── workload_graph.rs        — Community analysis graph as partitionable workload
-├── partition_mapping.rs     — Derives partition; checks AC-1 through AC-4; closes OC-DB-1
-├── kernel_execution.rs      — Execution model; ROCm HIP interface declaration
-├── throughput_invariants.rs — Structural throughput derivation; closes OC-DB-3
-└── convergence.rs           — Full chain integration test; formal OC-DB-1 closure
-```
-
----
+- OC-DB-1  CLOSED: kernel-to-hardware mapping derived from declared structure
+- OC-DB-3  CLOSED STRUCTURALLY: throughput derived from declared constants
 
 ## Open Conditions
 
-| ID | Description | Status |
-|---|---|---|
-| OC-IF-1 | Per-link bandwidth uniformity: AMD declares aggregate (1,194.8 GB/s); per-link derived assuming uniform distribution | Open |
-| OC-IF-2 | Partition admissibility for inter-community workloads: closure holds for independent analyses; workloads with inter-community dependencies require separate derivation | Open |
-| OC-IF-3 | ROCm HIP kernel implementation: execution model declared; kernel source is a downstream deliverable | Open |
-| OC-IF-4 | Single working-set read per ABR pass: declared as reference execution model for sparse resident graphs; formal derivation from operator traversal count not yet complete | Open |
-| OC-DB-6 | Self-describing property: supported by declared execution model; formal derivation from operator fixed-point not yet complete | Open |
+- OC-IF-1  Per-link bandwidth uniformity: AMD declares aggregate (1,194.8 GB/s).
+           Per-link derived assuming uniform distribution across 16 directed links.
+           Replace with direct per-link measurement when available.
 
----
+- OC-IF-2  Partition admissibility for inter-community workloads: closure argument
+           holds for independent community analyses only. Workloads with declared
+           inter-community dependencies require fabric bandwidth and a separate
+           partition derivation.
 
-## Running Tests
+- OC-IF-3  ROCm HIP kernel implementation: execution model declared here.
+           HIP kernel source is a downstream deliverable. Implementation must
+           satisfy the declared HipKernelSpec interface.
 
-```bash
-cargo test
-```
+- OC-IF-4  Single working-set read per pass assumption: declared for sparse graphs
+           where working set fits in cache. Formal derivation from operator
+           mathematics remains open.
 
-Expected output: **57 passed; 0 failed**
+- OC-IF-5  Throughput figure is latency-bound, not bandwidth-bound.
+           The derivation in throughput_invariants.rs assumed bandwidth-bound
+           execution (throughput = bandwidth / working_set). Scaling measurement
+           on home system (abr-home-system-benchmark, Ryzen 5 7600X, 2026-08-08)
+           confirms the ABR kernel is latency-bound by the B operator sequential
+           dependency chain. NS/EDGE is constant across graph sizes 1,023-16,383
+           edges (4.25-4.69 ns/edge, ratios 1.00-1.05). Throughput on MI355X
+           requires revision from bandwidth/working-set derivation to:
+             throughput = 1 / (n_edges x ns_per_edge_on_MI355X)
+           where ns_per_edge_on_MI355X is determined by HBM3E memory latency,
+           not bandwidth. The 7.6M analyses/second figure is an upper bound
+           pending direct measurement on MI355X hardware. OC-IF-3 is the path
+           to closing this condition.
 
----
-
-## Conformance Statement
-
-A convergence PASS is a conformance statement — not a correspondence claim. Conformance confirms that the declared structure is internally consistent and that every quantity traces to a declared observable through M. Correspondence — that the declared throughput matches measured hardware throughput — requires instrument measurement (OC-IF-3, OC-IF-4).
-
----
+- OC-DB-6  Self-describing property: supported by this repo execution model
+           declaration. Formal derivation from operator fixed-point remains open.
 
 ## Grounding Documents
 
-- `abr-datacenter-build` V0.2 — open conditions OC-DB-1 through OC-DB-6
-- `abr-community-grid-match` — Lompoc primary case, Verification PASS
-- `operators.rs` V8 — ABR kernel declaration
-- `derived_invariants.rs` V4.1 — Layer 3 invariants
-- AMD MI355X Platform specification — https://www.amd.com/en/products/accelerators/instinct/mi350/mi355x/platform.html (retrieved 2026-08-05)
-- AMD ROCm — https://www.amd.com/en/products/software/rocm.html
-
----
-
-## License
-
-Apache License 2.0 — see LICENSE file.
-
-*Metatron Dynamics, Inc. Robin Macomber. Bounded over D. No claim beyond D.*
+- abr-datacenter-build V0.2
+- abr-community-grid-match — Lompoc primary case, Verification PASS
+- operators.rs V8 — ABR kernel declaration
+- derived_invariants.rs V4.1 — Layer 3 invariants
+- AMD MI355X Platform specification (retrieved 2026-08-05)
+- AMD ROCm published specification
+- abr-home-system-benchmark — scaling measurement confirming latency-bound
+  execution (2026-08-08, Ryzen 5 7600X, 18/18 tests, linear scaling confirmed)
