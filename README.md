@@ -57,16 +57,17 @@ cargo test
            where working set fits in cache. Formal derivation from operator
            mathematics remains open.
 
-- OC-IF-5  Throughput figure is consistent with latency-bound execution, not
-           bandwidth-bound.
+- OC-IF-5  Throughput figure is consistent with approximately constant per-edge
+           cost execution, not bandwidth-bound.
            The derivation in throughput_invariants.rs assumed bandwidth-bound
            execution (throughput = bandwidth / working_set). Scaling measurement
            on home system (abr-home-system-benchmark, Ryzen 5 7600X, 2026-08-08,
-           18/18 tests) shows NS/EDGE constant across graph sizes 1,023-16,383
-           edges (4.25-4.69 ns/edge, ratios 1.00-1.05). This result is consistent
-           with execution being latency-bound by the B operator sequential
-           dependency chain. Throughput on MI355X requires revision from
-           bandwidth/working-set derivation to:
+           24/24 tests, two independent runs) shows NS/EDGE approximately constant
+           across graph sizes 1,023-16,383 edges (3.4-3.8 ns/edge across both
+           runs, ratios 0.956-1.072). This result is consistent with approximately
+           constant per-edge cost for V7 ABR operators on this hardware and
+           declared open-chain topology. Throughput on MI355X requires revision
+           from bandwidth/working-set derivation to:
              throughput = 1 / (n_edges x ns_per_edge_on_MI355X)
            where ns_per_edge_on_MI355X must be determined by direct MI355X
            measurement; the home-system scaling result indicates that latency,
@@ -81,10 +82,13 @@ cargo test
 ## Grounding Documents
 
 - abr-datacenter-build V0.2
-- abr-community-grid-match — Lompoc primary case, Verification PASS
-- operators.rs V8 — ABR kernel declaration
-- derived_invariants.rs V4.1 — Layer 3 invariants
+- abr-community-grid-match -- Lompoc primary case, Verification PASS
+- operators.rs V7 -- ABR kernel declaration (ABR formulas lines 890-988)
+- derived_invariants.rs V4.1 -- Layer 3 invariants
 - AMD MI355X Platform specification (retrieved 2026-08-05)
 - AMD ROCm published specification
-- abr-home-system-benchmark — scaling measurement consistent with latency-bound
-  execution (2026-08-08, Ryzen 5 7600X, 18/18 tests, linear scaling confirmed)
+- abr-home-system-benchmark -- scaling measurement consistent with
+  approximately constant per-edge cost for V7 ABR operators
+  (2026-08-08, Ryzen 5 7600X, 24/24 tests, two independent runs,
+  3.4-3.8 ns/edge confirmed)
+  https://github.com/Relational-Relativity-Corporation/abr-home-system-benchmark
