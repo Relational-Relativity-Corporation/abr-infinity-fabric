@@ -12,7 +12,8 @@
 //   3. Community analysis graph is declared as partitionable workload.
 //   4. Partition mapping satisfies AC-1 through AC-4.
 //   5. Execution model declares correct software stack and efficiency basis.
-//   6. Throughput derivation is admissible from confirmed partition.
+//   6. Throughput derivation retained as historical upper bound (retracted
+//      as OC-DB-3 closure per OC-IF-5; see throughput_invariants.rs).
 //
 // A PASS here is the formal closure of OC-DB-1 from abr-datacenter-build.
 //
@@ -35,7 +36,7 @@
 //   Kernel-to-hardware mapping formally derived. ABR operators execute
 //   at declared HBM3E bandwidth on resident working set. Zero fabric
 //   traffic for independent community analyses. OC-DB-1 closed.
-//   OC-DB-3 closed structurally.
+//   OC-DB-3 OPEN (bandwidth-bound derivation retracted per OC-IF-5).
 //   Status: this convergence test.
 //
 // â”€â”€ Conformance Statement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -161,7 +162,7 @@ pub fn run_convergence_test() -> ConvergenceResult {
                          Independent community analyses execute at full HBM3E \
                          bandwidth with zero fabric traffic. AC-1 through AC-4 \
                          satisfied by declared structure.",
-        oc_db3_status: "CLOSED STRUCTURALLY â€” throughput derived from declared \
+        oc_db3_status: "OPEN â€” bandwidth/working-set calculation derived from declared \
                          constants. Correspondence requires instrument measurement.",
         layer_summary: "Layer 1 (grid physics) + Layer 2 (compute architecture) + \
                         Layer 3 (rack declaration) + Layer 4 (kernel-hardware mapping): \
@@ -192,10 +193,10 @@ pub fn convergence_report(result: &ConvergenceResult) -> String {
                  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n\
                  OC-DB-3: {}\n\
                  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n\
-                 Throughput (structural derivation):\n\
-                   Per module:  {:.0} analyses/second\n\
-                   Rack total:  {:.0} analyses/second\n\
-                   Pass time:   {:.1} ns per community analysis\n\
+                 Retracted bandwidth-bound upper bound (audit record):\n\
+                   Historical modeled rate/module:  {:.0} (retracted)\n\
+                   Historical modeled rate/rack:    {:.0} (retracted)\n\
+                   Historical modeled time/pass:   {:.1} ns (retracted)\n\
                  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n\
                  Layer convergence: {}\n\
                  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n\
@@ -256,22 +257,22 @@ mod tests {
         let result = run_convergence_test();
         match result {
             ConvergenceResult::Pass { oc_db3_status, .. } => {
-                assert!(oc_db3_status.contains("CLOSED STRUCTURALLY"),
-                    "Pass result must declare OC-DB-3 as CLOSED STRUCTURALLY");
+                assert!(oc_db3_status.contains("OPEN"),
+                    "OC-DB-3 must be declared OPEN (bandwidth-bound derivation retracted)");
             }
             ConvergenceResult::Fail { .. } => panic!("Expected Pass"),
         }
     }
 
     #[test]
-    fn throughput_positive_in_pass() {
+    fn retracted_calculation_nonzero_in_pass() {
         let result = run_convergence_test();
         match result {
             ConvergenceResult::Pass { throughput, .. } => {
                 assert!(throughput.analyses_per_second_per_module > 0.0,
-                    "Throughput per module must be positive");
+                    "Historical modeled rate per module must be nonzero (audit)");
                 assert!(throughput.analyses_per_second_rack > 0.0,
-                    "Rack throughput must be positive");
+                    "Historical modeled rate at rack must be nonzero (audit)");
             }
             ConvergenceResult::Fail { .. } => panic!("Expected Pass"),
         }

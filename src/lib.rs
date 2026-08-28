@@ -1,4 +1,4 @@
-// lib.rs -- Metatron Dynamics, Inc.
+﻿// lib.rs -- Metatron Dynamics, Inc.
 // abr-infinity-fabric: AMD Infinity Fabric declared as relational structure.
 // Closes OC-DB-1 (kernel-to-hardware mapping) from abr-datacenter-build.
 // Bounded over D. No claim beyond D.
@@ -9,24 +9,25 @@
 //
 //   OC-DB-1: The ABR operator traversal pattern on sparse declared graphs
 //   is not yet formally mapped to AMD Infinity Fabric topology. The
-//   efficiency advantage is structurally derived; the hardware-specific
-//   throughput is an open condition.
+//   structural mapping is derived; the hardware-specific throughput is an
+//   open condition. No ABR-specific efficiency advantage is claimed
+//   without a matched external baseline (External Baseline Comparison
+//   criterion, operators.rs V8, 2026-08-28).
 //
 // Closure argument:
 //   1. Infinity Fabric declared as directed graph through M (AMD MI355X spec).
 //   2. ABR A operator applied to fabric bandwidth field -- sign consistent
-//      with kernel V8, bottleneck identified as fabric switch (1,194.8 GB/s
+//      with kernel V8, lower-bandwidth locus identified as fabric switch (1,194.8 GB/s
 //      vs module bandwidth 8,000 GB/s per module).
 //   3. Community analysis working set (1 MB) fits entirely in HBM3E (288 GB).
 //   4. Independent community analyses require zero inter-module communication.
 //   5. Independent community analyses require zero inter-module communication
-//      -- the fabric bottleneck is not active for this workload class.
-//   6. ABR execution is LATENCY-BOUND by the B operator sequential dependency
-//      chain -- not bandwidth-bound. Scaling measurement on home system
-//      (abr-home-system-benchmark, Ryzen 5 7600X, 2026-08-08) confirms
-//      NS/EDGE constant across 1,023-16,383 edges (4.25-4.69 ns/edge,
-//      ratios 1.00-1.05). Full HBM3E bandwidth is available but the binding
-//      constraint is latency per relational step, not bandwidth.
+//      -- the fabric lower-bandwidth locus is not active for this workload class.
+//   6. Home-system measurements (abr-home-system-benchmark, Ryzen 5 7600X,
+//      2026-08-08) are consistent with approximately constant per-edge
+//      execution cost across 1,023-16,383 edges (4.25-4.69 ns/edge,
+//      ratios 1.00-1.05). The measurement does not isolate the hardware
+//      or operator mechanism producing that cost.
 //   7. Throughput requires revision per OC-IF-5. Admissible derivation:
 //      throughput = 1 / (n_edges x ns_per_edge_on_MI355X).
 //      7.6M analyses/second is an upper bound pending direct measurement
@@ -46,11 +47,11 @@
 // -- Module Structure ---------------------------------------------------------
 //
 //   fabric_topology     -- Infinity Fabric as declared directed graph (9 loci, 16 edges)
-//   fabric_field        -- Bandwidth field; A operator; bottleneck identification
+//   fabric_field        -- Bandwidth field; A operator; lower-bandwidth locus identification
 //   workload_graph      -- Community graph as partitionable workload structure
 //   partition_mapping   -- Derives partition; checks AC-1 through AC-4; closes OC-DB-1
 //   kernel_execution    -- Execution model; ROCm HIP spec; efficiency basis
-//   throughput_invariants -- Structural throughput derivation; closes OC-DB-3
+//   throughput_invariants -- Retracted bandwidth-bound upper bound (OC-DB-3 OPEN)
 //   convergence         -- Full chain integration test; formal OC-DB-1 closure
 //
 // -- Open Conditions Closed ---------------------------------------------------
@@ -59,10 +60,9 @@
 //          ABR operators execute at HBM3E bandwidth for independent community
 //          analyses. Zero fabric traffic. See convergence.rs for formal argument.
 //
-// OC-DB-3  CLOSED STRUCTURALLY -- throughput derived from declared constants.
-//          ~7.6M analyses/second per module; ~61M at rack scale.
-//          Correspondence requires instrument measurement.
-//          NOTE: superseded by OC-IF-5 -- see below.
+// OC-DB-3  OPEN -- bandwidth/working-set throughput derivation retracted per
+//          OC-IF-5. The 7.6M figure is a retracted upper bound, not a closure.
+//          Actual throughput requires direct MI355X measurement.
 //
 // -- Open Conditions Remaining ------------------------------------------------
 //
@@ -83,20 +83,20 @@
 //          graphs where working set fits in cache. Formal derivation from
 //          operator mathematics remains open.
 //
-// OC-IF-5  Throughput figure is latency-bound, not bandwidth-bound.
+// OC-IF-5  Throughput figure is consistent with approximately constant per-edge
 //          The derivation in throughput_invariants.rs assumed bandwidth-bound
 //          execution (throughput = bandwidth / working_set). Scaling measurement
 //          on home system (abr-home-system-benchmark, Ryzen 5 7600X, 2026-08-08,
-//          18/18 tests) confirms the ABR kernel is latency-bound by the B
-//          operator sequential dependency chain. NS/EDGE is constant across
-//          graph sizes 1,023-16,383 edges (4.25-4.69 ns/edge, ratios 1.00-1.05).
+//          18/18 tests) is consistent with approximately constant per-edge
+//          execution cost across graph sizes 1,023-16,383 edges (4.25-4.69
+//          ns/edge, ratios 1.00-1.05). The measurement does not isolate the
+//          hardware or operator mechanism producing that cost.
 //          Throughput on MI355X requires revision from bandwidth/working-set
-//          derivation to:
-//            throughput = 1 / (n_edges x ns_per_edge_on_MI355X)
-//          where ns_per_edge_on_MI355X is determined by HBM3E memory latency,
-//          not bandwidth. The 7.6M analyses/second figure is an upper bound
-//          pending direct measurement on MI355X hardware. OC-IF-3 (HIP
-//          implementation) is the path to closing this condition.
+//          derivation to a per-edge cost model:
+//            T_analysis = n_edges * t_edge_MI355X
+//          where t_edge_MI355X must be determined by direct MI355X measurement.
+//          The 7.6M analyses/second figure is a retracted upper bound.
+//          OC-IF-3 (HIP implementation) is the path to closing this condition.
 //
 // OC-DB-6  Self-describing property: supported by this repo's execution model
 //          declaration (the kernel that justified Lompoc now maps to its
@@ -119,8 +119,9 @@
 //   derived_invariants.rs V4.1 -- Layer 3 invariants
 //   AMD MI355X Platform specification (retrieved 2026-08-05)
 //   AMD ROCm published specification
-//   abr-home-system-benchmark -- scaling measurement confirming latency-bound
-//     execution (2026-08-08, Ryzen 5 7600X, 18/18 tests, linear scaling confirmed)
+//   abr-home-system-benchmark -- scaling measurement consistent with approximately
+//     constant per-edge cost (2026-08-08, Ryzen 5 7600X, 18/18 tests; does not
+//     isolate the mechanism producing that cost)
 
 pub mod fabric_topology;
 pub mod fabric_field;

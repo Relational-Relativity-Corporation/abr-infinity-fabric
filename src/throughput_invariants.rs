@@ -1,11 +1,19 @@
 ﻿// throughput_invariants.rs â€” Metatron Dynamics, Inc.
-// Throughput derivation â€” closes OC-DB-3 structurally.
+// Throughput derivation â€” RETRACTED as OC-DB-3 closure (see OC-IF-5).
+// The bandwidth/working-set derivation below is retained as a historical
+// upper-bound calculation only. It does not close OC-DB-3.
+// Actual throughput is consistent with approximately constant per-edge
+// cost (home-system benchmark, OC-IF-5) and requires direct MI355X
+// measurement to determine.
 // Bounded over D. No claim beyond D.
 //
 // â”€â”€ What This Module Derives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // With OC-DB-1 closed (partition mapping confirmed admissible), the
-// throughput figure for OC-DB-3 is derivable from declared quantities.
+// bandwidth/working-set calculation below was originally presented as
+// closing OC-DB-3. It is now RETRACTED as a throughput derivation
+// (see OC-IF-5). The arithmetic is retained as a historical upper-bound
+// calculation only.
 //
 // â”€â”€ Derivation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
@@ -15,7 +23,7 @@
 //   - ABR operators A â†’ B â†’ R: each reads the working set once (sparse traversal)
 //   - Working set is resident in HBM3E: no eviction, full bandwidth available
 //
-// Derivation of operator throughput:
+// Historical bandwidth-bound calculation (retracted as throughput):
 //   One ABR pass (A â†’ B â†’ R) reads the declared working set.
 //   At declared HBM3E bandwidth of 8,000 GB/s:
 //   Time per pass = working_set / bandwidth
@@ -30,11 +38,12 @@
 //   Community analyses per second per module â‰ˆ 7.6 million.
 //
 // At full rack (8 modules):
-//   Total throughput â‰ˆ 61 million community analyses per second.
+//   Total historical modeled rate â‰ˆ 61 million community analyses per second.
 //
 // â”€â”€ Epistemic Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
-// This is a STRUCTURAL DERIVATION from declared constants â€” not a
+// This was originally labeled a structural derivation from declared constants.
+// It is now a RETRACTED BANDWIDTH-BOUND UPPER-BOUND CALCULATION â€” not a
 // measured throughput. The derivation assumes:
 //   1. Working set is fully resident in HBM3E (declared: fits in 288 GB).
 //   2. Each ABR pass reads the working set once (sparse traversal property).
@@ -48,8 +57,8 @@
 // â”€â”€ Open Conditions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
 // OC-DB-3: Full closure requires instrument measurement. This derivation
-//          closes OC-DB-3 structurally â€” the figure is admissible from
-//          declared quantities. Correspondence requires measurement.
+//          RETRACTED as OC-DB-3 closure â€” the arithmetic is reproducible from declared quantities,
+//          but its interpretation as throughput is retracted. Correspondence requires measurement.
 // OC-IF-1: Per-link bandwidth assumed uniform. Does not affect single-module
 //          throughput for independent analyses (zero fabric traffic).
 // OC-IF-3: HIP kernel implementation may introduce overhead not captured here.
@@ -61,7 +70,8 @@ use crate::fabric_field::OAM_MEMORY_BW_GB_S;
 /// Number of OAM modules in the declared platform.
 const N_MODULES: u64 = 8;
 
-/// Declared throughput invariants for the MI355X rack.
+/// Historical bandwidth-bound calculation for the MI355X rack.
+/// RETRACTED as throughput (OC-IF-5). Retained for audit continuity.
 #[derive(Debug, Clone)]
 pub struct ThroughputInvariants {
     /// Time per ABR pass per community analysis. Units: nanoseconds.
@@ -81,10 +91,12 @@ pub struct ThroughputInvariants {
     pub open_conditions: &'static str,
 }
 
-/// Derives throughput invariants from declared quantities.
+/// Computes historical bandwidth-bound upper-bound calculation from
+/// declared quantities. RETRACTED as a throughput derivation (OC-IF-5).
 ///
-/// Requires AdmissiblePass from partition_mapping â€” throughput derivation
-/// is not admissible if OC-DB-1 is not closed.
+/// Requires AdmissiblePass from partition_mapping â€” historical bandwidth-bound calculation is retained
+/// only when the declared partition mapping is admissible; it does not
+/// establish throughput.
 ///
 /// Returns None if partition result does not close OC-DB-1.
 pub fn derive_throughput(partition_result: &PartitionResult) -> Option<ThroughputInvariants> {
@@ -121,10 +133,12 @@ pub fn derive_throughput(partition_result: &PartitionResult) -> Option<Throughpu
         analyses_per_second_per_module,
         analyses_per_second_rack,
         bandwidth_utilization_fraction,
-        epistemic_status: "STRUCTURAL DERIVATION from declared constants. \
-                            Not a measured throughput. Correspondence requires \
-                            instrument measurement (OC-DB-3).",
-        open_conditions: "OC-DB-3 (correspondence requires measurement), \
+        epistemic_status: "RETRACTED UPPER BOUND from bandwidth/working-set model. \
+                            OC-IF-5 established that execution is consistent with \
+                            approximately constant per-edge cost, not bandwidth-bound. \
+                            Actual throughput requires direct MI355X measurement.",
+        open_conditions: "OC-DB-3 (NOT closed — bandwidth/working-set derivation retracted; \
+                          actual throughput requires MI355X measurement per OC-IF-5), \
                           OC-IF-3 (HIP implementation overhead not captured)",
     })
 }
@@ -134,12 +148,12 @@ pub fn throughput_report(inv: &ThroughputInvariants) -> String {
     format!(
         "â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n\
          ABR INFINITY FABRIC â€” THROUGHPUT INVARIANTS\n\
-         AMD Instinct MI355X Platform â€” Structural Derivation\n\
+         AMD Instinct MI355X Platform â€” Retracted Bandwidth-Bound Calculation (Audit Record)\n\
          Metatron Dynamics, Inc. Â· Bounded over D.\n\
          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n\
          Time per ABR pass (Aâ†’Bâ†’R):           {:.1} ns per community\n\
-         Throughput per module:               {:.0} analyses/second\n\
-         Throughput at rack scale (8 modules):{:.0} analyses/second\n\
+         Historical modeled rate per module:               {:.0} analyses/second\n\
+         Historical modeled rate at rack (8 modules):{:.0} analyses/second\n\
          Bandwidth utilization:               {:.0}% of declared HBM3E\n\
          â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€\n\
          Epistemic status: {}\n\
@@ -170,22 +184,23 @@ mod tests {
     }
 
     #[test]
-    fn throughput_requires_admissible_partition() {
-        // derive_throughput must return None for a failed partition.
+    fn retracted_calculation_requires_admissible_partition() {
+        // Historical calculation must return None for a failed partition.
         let failed = PartitionResult::FailedCondition {
             condition: "AC-1",
             finding: "test".to_string(),
         };
         assert!(derive_throughput(&failed).is_none(),
-            "Throughput derivation must require AdmissiblePass input");
+            "Historical calculation requires AdmissiblePass (audit continuity)");
     }
 
     #[test]
-    fn throughput_derived_from_admissible_partition() {
+    fn retracted_calculation_computable_from_admissible_partition() {
         let result = get_admissible_result();
         let inv = derive_throughput(&result);
         assert!(inv.is_some(),
-            "Throughput must be derivable from admissible partition result");
+            "Retracted upper-bound calculation must still be computable from \
+             admissible partition result (audit continuity)");
     }
 
     #[test]
@@ -200,21 +215,21 @@ mod tests {
     }
 
     #[test]
-    fn throughput_per_module_large() {
+    fn retracted_rate_per_module_nonzero() {
         let result = get_admissible_result();
         let inv = derive_throughput(&result).unwrap();
-        // ~7.6 million analyses/second per module
+        // ~7.6 million (retracted historical modeled rate, not measured throughput)
         assert!(inv.analyses_per_second_per_module > 1_000_000.0,
-            "Throughput per module must exceed 1M analyses/second");
+            "Historical modeled rate per module must be nonzero (audit arithmetic)");
     }
 
     #[test]
-    fn rack_throughput_is_eight_modules() {
+    fn retracted_rack_rate_is_eight_modules() {
         let result = get_admissible_result();
         let inv = derive_throughput(&result).unwrap();
         let expected = inv.analyses_per_second_per_module * 8.0;
         assert!((inv.analyses_per_second_rack - expected).abs() < 1.0,
-            "Rack throughput must equal 8 Ã— per-module throughput");
+            "Historical modeled rack rate must equal 8 Ã— per-module throughput");
     }
 
     #[test]
@@ -235,12 +250,12 @@ mod tests {
     }
 
     #[test]
-    fn report_states_structural_derivation() {
+    fn report_states_retracted_upper_bound() {
         let result = get_admissible_result();
         let inv = derive_throughput(&result).unwrap();
         let report = throughput_report(&inv);
-        assert!(report.contains("STRUCTURAL DERIVATION"),
-            "Report must state epistemic status as structural derivation");
+        assert!(report.contains("RETRACTED UPPER BOUND"),
+            "Report must state epistemic status as retracted upper bound");
         assert!(report.contains("OC-DB-3"),
             "Report must name OC-DB-3");
     }

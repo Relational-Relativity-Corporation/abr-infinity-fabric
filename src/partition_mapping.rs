@@ -41,15 +41,16 @@
 //      no HBM3E eviction occurs during operator execution.
 //   3. Inter-module communication is zero for independent community analyses â€”
 //      the declared Infinity Fabric links carry zero traffic for this workload.
-//   4. The memory bandwidth bottleneck identified in fabric_field.rs
+//   4. The lower-bandwidth locus identified in fabric_field.rs
 //      (switch aggregate 1,194.8 GB/s vs module capacity 8,000 GB/s)
 //      does not constrain single-module execution â€” each module executes
 //      its declared community graphs without requiring fabric communication.
 //
 // Consequence: the ABR kernel executes at declared HBM3E bandwidth
 // (8.0 TB/s per module) rather than at fabric switch bandwidth (1,194.8 GB/s).
-// The fabric bottleneck is irrelevant for independent community workloads.
-// This is the declared efficiency advantage.
+// The fabric lower-bandwidth locus is not active for independent community
+// workloads (zero inter-module traffic). This is a structural property of
+// the declared partition, not an ABR-specific efficiency advantage.
 //
 // â”€â”€ Open Conditions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
@@ -76,8 +77,9 @@ pub enum PartitionResult {
         /// Inter-module bandwidth required. Units: GB/s.
         /// Zero for independent community workloads.
         inter_module_bandwidth_required_gb_s: f64,
-        /// Whether fabric switch bandwidth is a constraint.
-        fabric_bottleneck_active: bool,
+        /// Whether fabric lower-bandwidth locus is active (workload demands
+        /// inter-module bandwidth).
+        lower_bandwidth_locus_active: bool,
     },
     /// One or more admissibility conditions failed.
     FailedCondition {
@@ -223,7 +225,7 @@ pub fn admissibility_check(
                    Zero inter-module communication required. \
                    ABR kernel executes at full HBM3E bandwidth per module.",
         inter_module_bandwidth_required_gb_s: total_inter_module_bw,
-        fabric_bottleneck_active: total_inter_module_bw > 0.0,
+        lower_bandwidth_locus_active: total_inter_module_bw > 0.0,
     }
 }
 
@@ -292,17 +294,17 @@ mod tests {
     }
 
     #[test]
-    fn fabric_bottleneck_not_active() {
-        // For independent analyses, fabric switch is not a bottleneck.
+    fn lower_bandwidth_locus_not_active() {
+        // For independent analyses, the fabric lower-bandwidth locus is not active.
         // Zero inter-module communication means switch carries zero traffic.
         let g = declare_lompoc_community_graph();
         let t = declare_fabric_topology();
         let assignment = derive_partition_assignment(&g, &t);
         let result = admissibility_check(&assignment, &g, &t);
         match result {
-            PartitionResult::AdmissiblePass { fabric_bottleneck_active, .. } => {
-                assert!(!fabric_bottleneck_active,
-                    "Fabric switch must not be a bottleneck for independent \
+            PartitionResult::AdmissiblePass { lower_bandwidth_locus_active, .. } => {
+                assert!(!lower_bandwidth_locus_active,
+                    "Fabric lower-bandwidth locus must not be active for independent \
                      community analyses");
             }
             PartitionResult::FailedCondition { .. } => {

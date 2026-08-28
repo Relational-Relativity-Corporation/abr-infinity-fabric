@@ -24,7 +24,7 @@
 // At OAMâ†’Switch edges:
 //   OAM bandwidth (8,000 GB/s) - switch aggregate (1,194.8 GB/s) = +6,805.2 GB/s
 //   Positive A: the module source has higher bandwidth than the switch target.
-//   This is the declared fabric bottleneck â€” the switch is the constraint,
+//   This is the declared lower-bandwidth locus â€” the switch is the lower-bandwidth locus,
 //   not the modules. The positive A at these edges identifies where
 //   relational contrast is highest in the fabric.
 //
@@ -81,7 +81,8 @@ pub fn declare_bandwidth_field(n_loci: usize) -> FabricBandwidthField {
 /// Consistent with kernel declaration in operators.rs V8.
 /// Positive output: source has higher bandwidth than target.
 /// At OAMâ†’Switch: module bandwidth >> switch bandwidth â†’ A > 0.
-/// This identifies the switch as the bandwidth bottleneck (declared constraint).
+/// This identifies the switch as the lower-bandwidth locus (not an operational
+/// bottleneck unless workload demand binds on fabric bandwidth).
 pub fn operator_a_fabric(
     field: &FabricBandwidthField,
     topology: &FabricTopology,
@@ -92,7 +93,8 @@ pub fn operator_a_fabric(
 }
 
 /// Fabric contrast: identifies which edges carry the highest relational contrast.
-/// High positive A at OAMâ†’Switch edges identifies the switch as the constraint.
+/// High positive A at OAMâ†’Switch edges identifies the switch as the
+/// lower-bandwidth locus in the declared relation.
 /// Returns (edge_index, source, target, a_value) sorted by |A| descending.
 pub fn fabric_contrast(
     a_output: &[f64],
@@ -106,18 +108,21 @@ pub fn fabric_contrast(
     contrasts
 }
 
-/// Bottleneck identification: returns the locus that is the binding
-/// bandwidth constraint â€” the locus where A output is most consistently
+/// Lower-bandwidth-locus identification.
+///
+/// Returns the locus receiving the greatest positive declared bandwidth
+/// contrast. This does not establish an operational bottleneck unless
+/// workload demand is independently shown to bind on that locus â€” the locus where A output is most consistently
 /// positive (more bandwidth leaving than arriving).
 ///
 /// In the declared MI355X topology, this is FABRIC_SWITCH: all 8 modules
 /// can generate 8,000 GB/s each, but the switch handles only 1,194.8 GB/s
-/// aggregate. The switch is the declared bottleneck.
-pub fn identify_bottleneck(
+/// aggregate. The switch is the declared lower-bandwidth locus.
+pub fn identify_lower_bandwidth_locus(
     field: &FabricBandwidthField,
     topology: &FabricTopology,
 ) -> usize {
-    // The bottleneck locus is the one where total egress demand from upstream
+    // The lower-bandwidth locus is the one where total egress demand from upstream
     // exceeds its declared bandwidth. Find the locus with minimum bandwidth
     // that has incoming edges from high-bandwidth sources.
     let a = operator_a_fabric(field, topology);
@@ -177,7 +182,8 @@ mod tests {
     #[test]
     fn a_positive_at_module_to_switch_edges() {
         // OAM (8,000 GB/s) â†’ Switch (1,194.8 GB/s): A = 8000 - 1194.8 = +6805.2
-        // Positive A identifies switch as bandwidth bottleneck.
+        // Positive A identifies the switch as the lower-bandwidth locus.
+        // This does not establish an operational bottleneck without workload demand.
         let t = declare_fabric_topology();
         let f = declare_bandwidth_field(t.n_loci);
         let a = operator_a_fabric(&f, &t);
@@ -221,13 +227,13 @@ mod tests {
     }
 
     #[test]
-    fn bottleneck_identified_as_switch() {
+    fn lower_bandwidth_locus_identified_as_switch() {
         let t = declare_fabric_topology();
         let f = declare_bandwidth_field(t.n_loci);
-        let bottleneck = identify_bottleneck(&f, &t);
-        assert_eq!(bottleneck, FABRIC_SWITCH,
-            "Declared bottleneck must be FABRIC_SWITCH â€” \
-             switch aggregate bandwidth is the binding constraint");
+        let lower_bw = identify_lower_bandwidth_locus(&f, &t);
+        assert_eq!(lower_bw, FABRIC_SWITCH,
+            "Lower-bandwidth locus must be FABRIC_SWITCH â€” \
+             switch aggregate bandwidth is lower than per-module bandwidth");
     }
 
     #[test]

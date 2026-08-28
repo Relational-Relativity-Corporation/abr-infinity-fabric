@@ -20,9 +20,9 @@
 //   3. Inter-module communication: zero for independent community analyses.
 //   4. Results collected at the network egress boundary.
 //
-// â”€â”€ Why ABR Executes Efficiently on MI355X â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Structural Properties of ABR Execution on MI355X â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //
-// The ABR kernel is memory-bandwidth-bound on sparse declared graphs.
+// The ABR kernel operates on sparse declared graphs with small working sets.
 // The working set (1 MB per community) fits entirely in HBM3E (288 GB).
 // This means:
 //
@@ -32,10 +32,9 @@
 //   - The sparse graph traversal pattern matches the Infinity Fabric
 //     topology's declared structure: directed edges with provenance.
 //
-// Contrast with conventional LLM inference:
-//   - LLM weights (140 GB for LLaMA 3 70B) continuously evict from HBM3E.
-//   - Effective bandwidth is consumed by weight loading, not computation.
-//   - The HBM3E bandwidth is the bottleneck for computation.
+// Note: ABR community analysis and LLM inference are different-scope tasks.
+//   A working-set comparison between them is not an admissible efficiency
+//   baseline (OC-DB-7, retracted in abr-datacenter-build).
 //
 // For ABR: the operator traversal IS the computation. The working set
 // remains resident. The full declared bandwidth is applied to relational
@@ -171,15 +170,16 @@ pub fn declare_hip_kernel_specs() -> Vec<HipKernelSpec> {
     ]
 }
 
-/// Declared efficiency advantage at this execution model.
-/// Compares ABR working-set-resident execution to reference LLM inference.
+/// RETRACTED (OC-DB-7 in abr-datacenter-build). This function computed
+/// a cross-task working-set ratio (140 GB LLM weights / 1 MB community
+/// analysis). That comparison is inadmissible — the tasks differ in scope.
+/// Retained for audit trail only; do not report as an advantage finding.
 ///
 /// Source for reference LLM: declared in abr-datacenter-build declared_hardware.rs
 ///   REFERENCE_LLM_WEIGHT_BYTES = 140 GB (Meta LLaMA 3 70B, FP16)
 ///   Source: Meta LLaMA 3 model card through M.
 ///
-/// This is a declared structural comparison, not a measured throughput.
-/// OC-DB-1 formal closure enables throughput derivation in throughput_invariants.rs.
+/// See OC-DB-7 in abr-datacenter-build for the full retraction record.
 pub fn declared_execution_advantage() -> f64 {
     use crate::workload_graph::COMMUNITY_WORKING_SET_BYTES;
 
@@ -191,7 +191,7 @@ pub fn declared_execution_advantage() -> f64 {
     let abr_working_set: f64 = COMMUNITY_WORKING_SET_BYTES as f64;
 
     // Ratio: reference LLM weight / ABR working set.
-    // Higher ratio = larger efficiency advantage for ABR.
+    // RETRACTED — cross-task comparison, not an admissible advantage metric.
     reference_llm_weight_bytes / abr_working_set
 }
 
@@ -246,14 +246,14 @@ mod tests {
     }
 
     #[test]
-    fn execution_advantage_in_declared_range() {
-        // 140 GB LLM weights / 1 MB ABR working set = 140,000x
-        let advantage = declared_execution_advantage();
-        assert!(advantage > 100_000.0,
-            "Declared execution advantage must exceed 100,000x");
-        assert!(advantage < 200_000.0,
-            "Declared execution advantage must be below 200,000x \
-             (confirms community working set, not rack topology, is used)");
+    fn retracted_cross_task_ratio_arithmetic_preserved() {
+        // OC-DB-7: audit-trail preservation only. This test confirms the
+        // historical arithmetic is unchanged, not that it represents an
+        // efficiency or advantage finding. See abr-datacenter-build OC-DB-7.
+        let ratio = declared_execution_advantage();
+        assert!(ratio > 100_000.0 && ratio < 200_000.0,
+            "audit check: historical arithmetic preserved — asserts nothing \
+             about efficiency or advantage");
     }
 
     #[test]
