@@ -1,4 +1,4 @@
-﻿// lib.rs -- Metatron Dynamics, Inc.
+// lib.rs -- Metatron Dynamics, Inc.
 // abr-infinity-fabric: AMD Infinity Fabric declared as relational structure.
 // Closes OC-DB-1 (kernel-to-hardware mapping) from abr-datacenter-build.
 // Bounded over D. No claim beyond D.
@@ -53,6 +53,8 @@
 //   kernel_execution    -- Execution model; ROCm HIP spec; efficiency basis
 //   throughput_invariants -- Retracted bandwidth-bound upper bound (OC-DB-3 OPEN)
 //   convergence         -- Full chain integration test; formal OC-DB-1 closure
+//   fabric_sim          -- Dependency class simulation; structural reduction (V0.3.0)
+//   sim3a               -- OC-IF-SIM-3A: relational topology scaling correspondence
 //
 // -- Open Conditions Closed ---------------------------------------------------
 //
@@ -102,6 +104,24 @@
 //          declaration (the kernel that justified Lompoc now maps to its
 //          hardware). Formal derivation from operator fixed-point remains open.
 //
+// OC-IF-SIM-1  OPEN -- DF PMC beat counts require Linux + AMDuProf MSR mode.
+//
+// OC-IF-SIM-2  OPEN -- O(n^2) complexity interaction with structural reduction
+//              declared for Phase 2. At transformer scale (n tokens, quadratic
+//              baseline = n^2 pairwise ops), IF traffic scales as O(n^2) for
+//              undeclared attention and O(n*k) for declared relational attention.
+//              Absolute beat savings grow quadratically with n.
+//
+// OC-IF-SIM-3A OPEN -- Relational topology scaling correspondence.
+//              Origin declares loci and relations through M. A->B->R traversal
+//              derives structural ratio. Simulation ratio = n = 8 (derived).
+//              Hardware ratio = 7.945-8.023 (bench_dependency_classes.rs,
+//              2026-09-03). Correspondence: PASS within declared range.
+//              See sim3a.rs and OC-IF-SIM-3.md.
+//
+// OC-IF-SIM-3B OPEN -- Absolute hardware cost gradient correspondence.
+//              Separate from 3A. Non-blocking.
+//
 // -- Layer Convergence --------------------------------------------------------
 //
 // Layer 1  abr-grid-integration: grid physics -> 100-175 MW viable band.
@@ -119,9 +139,12 @@
 //   derived_invariants.rs V4.1 -- Layer 3 invariants
 //   AMD MI355X Platform specification (retrieved 2026-08-05)
 //   AMD ROCm published specification
-//   abr-home-system-benchmark -- scaling measurement consistent with approximately
-//     constant per-edge cost (2026-08-08, Ryzen 5 7600X, 18/18 tests; does not
-//     isolate the mechanism producing that cost)
+//   abr-home-system-benchmark V13 -- chain_only Pass A: CPI and DRAM_PTI
+//     scaling across 4/32/128 MB working-set scales (2026-09-01, Ryzen 5 7600X)
+//   bench_dependency_classes.rs -- structural ordering correspondence
+//     (2026-09-03, Ryzen 5 7600X): FC/Ind ratio 7.945-8.023 stable across
+//     107x absolute cost change
+//   OC-IF-SIM-3.md -- open condition declaration with Origin confirmations
 
 pub mod fabric_topology;
 pub mod fabric_field;
@@ -132,3 +155,4 @@ pub mod throughput_invariants;
 pub mod convergence;
 
 pub mod fabric_sim;
+pub mod sim3a;
