@@ -130,3 +130,5 @@ pub mod partition_mapping;
 pub mod kernel_execution;
 pub mod throughput_invariants;
 pub mod convergence;
+
+pub mod fabric_sim;
